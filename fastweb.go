@@ -1,10 +1,11 @@
 package fastweb
 
 import (
+	// "reflect"
 	"github.com/valyala/fasthttp"
 )
 
-type HandlerFunc func(ctx *fasthttp.RequestCtx)
+type HandlerFunc func(ctx *Context)
 
 type Engine struct {
 	router	*router
@@ -30,6 +31,8 @@ func (engine *Engine) Run (addr string) (err error) {
 	return fasthttp.ListenAndServe(addr, engine.requestHandler)
 }
 
-func (engine *Engine) requestHandler (ctx *fasthttp.RequestCtx) {
+func (engine *Engine) requestHandler (fctx *fasthttp.RequestCtx) {
+	ctx := NewContext(fctx)
 	engine.router.handle(ctx)
+	ReleaseCtx(ctx)
 }

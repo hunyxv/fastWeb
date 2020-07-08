@@ -1,3 +1,3 @@
-module fastweb
+module fastWeb
 
 go 1.13
