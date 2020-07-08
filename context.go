@@ -27,7 +27,7 @@ var ctxPool *sync.Pool = &sync.Pool{
 func NewContext(fctx *fasthttp.RequestCtx) *Context {
 	ctx := ctxPool.Get().(*Context)
 	ctx.fastctx = fctx 
-	ctx.Path = string(fctx.RequestURI())
+	ctx.Path = string(fctx.Path())
 	return ctx
 }
 
@@ -69,7 +69,6 @@ func (ctx *Context) JSON(code int, obj interface{}) {
 	ctx.Status(code)
 	encoder := json.NewEncoder(ctx.fastctx)
 	if err := encoder.Encode(obj); err != nil {
-		// http.Error(ctx, err.Error(), 500)
 		fmt.Fprintf(ctx.fastctx, err.Error())
 		ctx.Status(500)
 	}
