@@ -2,38 +2,110 @@ package fastweb
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net"
 	"sync"
+	"time"
 
 	"github.com/valyala/fasthttp"
 )
 
-
 type H map[string]interface{}
 
-type Context struct {
-	fastctx		*fasthttp.RequestCtx
-	Path		string
-	UrlParams	map[string]string
+type Context interface {
+	SetUserValue(key string, value interface{})
+	SetUserValueBytes(key []byte, value interface{})
+	UserValue(key string) interface{}
+	UserValueBytes(key []byte) interface{}
+	VisitUserValues(visitor func([]byte, interface{}))
+	IsTLS() bool
+	TLSConnectionState() *tls.ConnectionState
+	Conn() net.Conn
+	String() string
+	ID() uint64
+	ConnID() uint64
+	Time() time.Time
+	ConnRequestNum() uint64
+	ConnTime() time.Time
+	SetConnectionClose()
+	SetStatusCode(statusCode int)
+	SetContentType(contentType string)
+	SetContentTypeBytes(contentType []byte)
+	RequestURI() []byte
+	URI() *fasthttp.URI
+	Referer() []byte
+	UserAgent() []byte
+	Path() []byte
+	Host() []byte
+	QueryArgs() *fasthttp.Args
+	PostArgs() *fasthttp.Args
+	MultipartForm() (*multipart.Form, error)
+	FormFile(key string) (*multipart.FileHeader, error)
+	FormValue(key string) []byte
+	IsGet() bool
+	IsPost() bool
+	IsPut() bool
+	IsDelete() bool
+	// IsConnect() bool
+	IsOptions() bool
+	// IsTrace() bool
+	IsPatch() bool
+	Method() []byte
+	IsHead() bool
+	// LocalAddr() net.Addr
+	// RemoteIP() net.IP
+	// LocalIP() net.IP
+	Error(msg string, statusCode int) 
+	Success(contentType string, body []byte)
+	SuccessString(contentType, body string)
+	Redirect(uri string, statusCode int)	// 重定向 到本服务某uri
+	// RedirectBytes(uri []byte, statusCode int) 
+	SetBody(body []byte)
+	SetBodyString(body string)
+	ResetBody() 
+	SendFile(path string)
+	// SendFileBytes(path []byte)
+	NotFound()  // 404 Page not found
+	Write(p []byte) (int, error) 
+	WriteString(s string) (int, error)
+	PostBody() []byte
+	// SetBodyStream(bodyStream io.Reader, bodySize int)
+	// SetBodyStreamWriter(sw fasthttp.StreamWriter) 
+	// IsBodyStream() bool
+	Logger() fasthttp.Logger
+	TimeoutErrorWithCode(msg string, statusCode int)
+	TimeoutErrorWithResponse(resp *fasthttp.Response)
+	// TimeoutErrorWithResponse (resp *fasthttp.Response)
+	// Init(req *fasthttp.Request, remoteAddr net.Addr, logger fasthttp.Logger) // 测试时使用
+	// Value(key interface{}) interface{}  // 等同于 UserValue(key)
+}
+
+type context struct {
+	Context *fasthttp.RequestCtx
 }
 
 var ctxPool *sync.Pool = &sync.Pool{
 	New: func() interface{} {
-		return new(Context)
+		return new(context)
 	},
 }
 
-func NewContext(fctx *fasthttp.RequestCtx) *Context {
-	ctx := ctxPool.Get().(*Context)
-	ctx.fastctx = fctx 
-	ctx.Path = string(fctx.Path())
-	return ctx
+func (c *context) Init(ctx *fasthttp.RequestCtx) {
+	c.Context = ctx
 }
+// func NewContext(fctx *fasthttp.RequestCtx) *context {
+// 	ctx := ctxPool.Get().(*Context)
+// 	ctx.Content = fctx
+// 	ctx.Path = string(fctx.Path())
+// 	return ctx
+// }
 
-func ReleaseCtx(ctx *Context){
-	ctx.Path = ""
-	ctx.fastctx = nil
+func (c *context) ReleaseCtx() {
+	
 	ctxPool.Put(ctx)
 }
 
