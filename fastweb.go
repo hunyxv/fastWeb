@@ -69,9 +69,10 @@ func (group *RouterGroup) POST (pattern string, handler HandlerFunc) {
 }
 
 func (engine *Engine) requestHandler (fctx *fasthttp.RequestCtx) {
-	ctx := NewContext(fctx)
+	ctx := new(context)
+	ctx.Init(fctx)
 	engine.router.handle(ctx)
-	ReleaseCtx(ctx)
+	ctx.releaseCtx()
 }
 
 func (engine *Engine) Run (addr string) (err error) {

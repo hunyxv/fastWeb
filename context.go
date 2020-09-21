@@ -104,9 +104,8 @@ func (c *context) Init(ctx *fasthttp.RequestCtx) {
 // 	return ctx
 // }
 
-func (c *context) ReleaseCtx() {
-	
-	ctxPool.Put(ctx)
+func (c *context) releaseCtx() {
+	ctxPool.Put(c)
 }
 
 func (c *Context) UrlParam(key string) string {
