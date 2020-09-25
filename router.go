@@ -75,13 +75,13 @@ func (r router) getRoute(method, path string) (*node, map[string]string) {
 	return nil, nil
 }
 
-func (r *router) handle(ctx *context) {
-	n, params := r.getRoute(string(ctx.fastctx.Method()), ctx.Path)
+func (r *router) handle(c *context) {
+	n, params := r.getRoute(string(c.Method()), c.Path())
 	if n != nil {
-		ctx.UrlParams = params
-		key := fmt.Sprintf("%s-%s", ctx.fastctx.Method(), n.pattern)
-		r.handlers[key](ctx)
+		c.URLParams = params
+		key := fmt.Sprintf("%s-%s", c.Method(), n.pattern)
+		r.handlers[key](c)
 	} else {
-		fmt.Fprintf(ctx.fastctx, "404 NOT FOUND: %s\n", ctx.fastctx.RequestURI())
+		fmt.Fprintf(c.Context, "404 NOT FOUND: %s\n", c.URI())
 	}
 }

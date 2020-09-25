@@ -6,7 +6,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type HandlerFunc func(ctx *Context)
+type HandlerFunc func(ctx *context)
 
 
 type Engine struct {
