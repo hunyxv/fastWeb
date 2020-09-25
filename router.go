@@ -80,7 +80,7 @@ func (r *router) handle(ctx *context) {
 	if n != nil {
 		ctx.URLParams = params
 		key := fmt.Sprintf("%s-%s", ctx.Method(), n.pattern)
-		r.handlers[key](c)
+		r.handlers[key](ctx)
 	} else {
 		ctx.NotFound()
 	}

@@ -109,6 +109,8 @@ func (c *context) Init(ctx *fasthttp.RequestCtx) {
 // }
 
 func (c *context) releaseCtx() {
+	c.URLParams = nil
+	c.Context = nil
 	ctxPool.Put(c)
 }
 

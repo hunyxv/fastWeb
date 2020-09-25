@@ -69,7 +69,7 @@ func (group *RouterGroup) POST (pattern string, handler HandlerFunc) {
 }
 
 func (engine *Engine) requestHandler (fctx *fasthttp.RequestCtx) {
-	ctx := new(context)
+	ctx := ctxPool.Get().(*context)
 	ctx.Init(fctx)
 	engine.router.handle(ctx)
 	ctx.releaseCtx()
