@@ -87,7 +87,7 @@ type Context interface {
 var _ Context = (*context)(nil)
 
 type context struct {
-	Context  *fasthttp.RequestCtx
+	Context   *fasthttp.RequestCtx
 	URLParams map[string]string
 }
 
@@ -189,7 +189,6 @@ func (c *context) NotFound() {
 func (c *context) Logger() fasthttp.Logger {
 	return c.Context.Logger()
 }
-
 
 func (c *context) GetURLParam(key string) (string, bool) {
 	val, ok := c.URLParams[key]

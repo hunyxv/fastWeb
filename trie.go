@@ -6,15 +6,14 @@ import (
 )
 
 type node struct {
-	pattern 	string
-	part 		string
-	children	[]*node
-	isWild		bool
+	pattern  string
+	part     string
+	children []*node
+	isWild   bool
 }
 
-
 var nodeSlicePool *sync.Pool = &sync.Pool{
-	New:	func() interface{} {
+	New: func() interface{} {
 		return make([]*node, 0)
 	},
 }
@@ -58,7 +57,7 @@ func (n *node) insert(pattern string, parts []string, depth int) {
 	child.insert(pattern, parts, depth+1)
 }
 
-func (n *node) search(parts[]string, depth int) *node {
+func (n *node) search(parts []string, depth int) *node {
 	if len(parts) == depth || strings.HasPrefix(n.part, "*") {
 		if n.pattern == "" {
 			return nil
@@ -71,7 +70,7 @@ func (n *node) search(parts[]string, depth int) *node {
 	defer ReleaseNodeSlice(children)
 
 	for _, child := range children {
-		result := child.search(parts, depth + 1)
+		result := child.search(parts, depth+1)
 		if result != nil {
 			return result
 		}
