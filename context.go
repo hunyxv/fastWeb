@@ -41,6 +41,8 @@ type Context interface {
 	// MultipartForm() (*multipart.Form, error)
 	// FormFile(key string) (*multipart.FileHeader, error)
 	// FormValue(key string) []byte
+	URLParam(key string) (string, bool)
+	URLParams() map[string]string
 	FormValue(key string) (string, bool)
 	FormValues() map[string]string
 	QueryParam(key string) (string, bool)
@@ -82,13 +84,16 @@ type Context interface {
 	// TimeoutErrorWithResponse (resp *fasthttp.Response)
 	// Init(req *fasthttp.Request, remoteAddr net.Addr, logger fasthttp.Logger) // 测试时使用
 	// Value(key interface{}) interface{}  // 等同于 UserValue(key)
+
+	SetBodyStrf(int, string, ...interface{})
+	JSON(int, interface{})
 }
 
 var _ Context = (*context)(nil)
 
 type context struct {
 	Context   *fasthttp.RequestCtx
-	URLParams map[string]string
+	urlParams map[string]string
 }
 
 var ctxPool *sync.Pool = &sync.Pool{
@@ -109,7 +114,7 @@ func (c *context) Init(ctx *fasthttp.RequestCtx) {
 // }
 
 func (c *context) releaseCtx() {
-	c.URLParams = nil
+	c.urlParams = nil
 	c.Context = nil
 	ctxPool.Put(c)
 }
@@ -190,12 +195,12 @@ func (c *context) Logger() fasthttp.Logger {
 	return c.Context.Logger()
 }
 
-func (c *context) GetURLParam(key string) (string, bool) {
-	val, ok := c.URLParams[key]
+func (c *context) URLParam(key string) (string, bool) {
+	val, ok := c.urlParams[key]
 	return val, ok
 }
-func (c *context) GetURLParams() map[string]string {
-	return c.URLParams
+func (c *context) URLParams() map[string]string {
+	return c.urlParams
 }
 
 func (c *context) FormValue(key string) (string, bool) {
@@ -240,7 +245,7 @@ func (c *context) SetHeader(key, value string) {
 	c.Context.Response.Header.Set(key, value)
 }
 
-func (c *context) SetBodyString(code int, format string, values ...interface{}) {
+func (c *context) SetBodyStrf(code int, format string, values ...interface{}) {
 	c.SetHeader("Content-Type", "text/plain")
 	c.SetStatus(code)
 	fmt.Fprintf(c.Context, fmt.Sprintf(format, values...))

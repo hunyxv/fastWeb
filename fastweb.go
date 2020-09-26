@@ -1,12 +1,10 @@
 package fastweb
 
 import (
-	"log"
-
 	"github.com/valyala/fasthttp"
 )
 
-type HandlerFunc func(ctx *context)
+type HandlerFunc func(ctx Context)
 
 type Engine struct {
 	*RouterGroup
@@ -53,7 +51,7 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 
 func (group *RouterGroup) addRoute(method, comp string, handler HandlerFunc) {
 	pattern := group.prefix + comp
-	log.Printf("Route %4s - %s", method, pattern)
+	// log.Printf("Route %4s - %s", method, pattern)
 	group.engine.router.addRoute(method, pattern, handler)
 }
 
