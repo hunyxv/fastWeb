@@ -18,7 +18,7 @@ var nodeSlicePool *sync.Pool = &sync.Pool{
 	},
 }
 
-func ReleaseNodeSlice(nodes []*node) {
+func releaseNodeSlice(nodes []*node) {
 	nodes = nodes[:0]
 	nodeSlicePool.Put(nodes)
 }
@@ -67,7 +67,7 @@ func (n *node) search(parts []string, depth int) *node {
 
 	part := parts[depth]
 	children := n.matchChildren(part)
-	defer ReleaseNodeSlice(children)
+	defer releaseNodeSlice(children)
 
 	for _, child := range children {
 		result := child.search(parts, depth+1)
