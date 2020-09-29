@@ -2,7 +2,6 @@ package fastweb
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -42,12 +41,12 @@ type Context interface {
 	// MultipartForm() (*multipart.Form, error)
 	// FormFile(key string) (*multipart.FileHeader, error)
 	// FormValue(key string) []byte
-	URLParam(key string) (string, bool)
+	URLParam(string) (string, bool)
 	URLParams() map[string]string
 	FormValue(key string) (string, bool)
 	FormValues() map[string]string
-	QueryParam(key string) (string, bool)
-	QueryParams() map[string]string
+	QueryParam(string) (string, bool)
+	QueryParams(interface{}) error
 	// IsGet() bool
 	// IsPost() bool
 	// IsPut() bool
@@ -229,13 +228,19 @@ func (c *context) QueryParam(key string) (string, bool) {
 	return "", false
 }
 
-func (c *context) QueryParams() map[string]string {
+func (c *context) QueryParams(obj interface{}) error {
+	ps, err := scan(obj)
+	if err != nil {
+		return err
+	}
+
 	args := c.Context.QueryArgs()
-	params := make(map[string]string, args.Len())
 	args.VisitAll(func(key, val []byte) {
-		params[b2s(key)] = b2s(val)
+		err = ps.padding(key, val, obj)
 	})
-	return params
+	err = ps.valid(obj)
+	
+	return err
 }
 
 func (c *context) SetStatus(code int) {
