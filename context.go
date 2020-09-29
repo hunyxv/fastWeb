@@ -9,8 +9,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type H map[string]interface{}
+// type H map[string]interface{}
 
+// Context fastweb 应用上下文
 type Context interface {
 	SetUserValue(key string, value interface{})
 	SetUserValueBytes(key []byte, value interface{})

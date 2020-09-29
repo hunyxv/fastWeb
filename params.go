@@ -8,11 +8,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
-var cache map[string]*params = make(map[string]*params)
+var cache sync.Map
 
+//map[string]*params = make(map[string]*params)
+
+// TODO add gt lt qe le ge ne 比较符
 type field struct {
 	name      string
 	key       string
@@ -155,7 +159,7 @@ func (p *params) valid(obj interface{}) error {
 	for _, f := range p.fields {
 		if f.required {
 			fv := v.FieldByName(f.name)
-			if fv.IsZero(){
+			if fv.IsZero() {
 				return fmt.Errorf("%s[%s] is required", f.name, f.key)
 			}
 		}
@@ -170,8 +174,9 @@ func scan(obj interface{}) (*params, error) {
 	}
 	t = t.Elem()
 	pname := t.Name()
-	if p, ok := cache[pname]; ok {
-		return p, nil
+
+	if p, ok := cache.Load(pname); ok { // cache[pname]; ok {
+		return p.(*params), nil
 	}
 
 	p := &params{name: pname, fields: make(map[string]*field, t.NumField())}
@@ -185,6 +190,6 @@ func scan(obj interface{}) (*params, error) {
 		}
 		p.fields[f.key] = f
 	}
-	cache[pname] = p
+	cache.Store(pname, p)
 	return p, nil
 }
