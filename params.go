@@ -14,8 +14,6 @@ import (
 
 var cache sync.Map
 
-//map[string]*params = make(map[string]*params)
-
 // TODO add gt lt qe le ge ne 比较符
 type field struct {
 	name      string
