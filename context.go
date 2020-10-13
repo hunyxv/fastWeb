@@ -108,6 +108,7 @@ var ctxPool *sync.Pool = &sync.Pool{
 
 func (c *context) Init(ctx *fasthttp.RequestCtx) {
 	c.fctx = ctx
+	c.urlParams = make(map[string]string)
 }
 
 func (c *context) GetFctx() *fasthttp.RequestCtx {
@@ -264,8 +265,9 @@ func (c *context) QueryParams(obj interface{}) error {
 	args.VisitAll(func(key, val []byte) {
 		err = ps.padding(key, val, obj)
 	})
-	err = ps.valid(obj)
-
+	if err == nil {
+		err = ps.valid(obj)
+	}
 	return err
 }
 

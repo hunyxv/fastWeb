@@ -41,11 +41,11 @@ func (f *field) setvalue(obj reflect.Value, v []byte) error {
 		}
 
 		if f.maxlength > 0 && len(v) > f.maxlength {
-			return errors.New("The value is too long")
+			return fmt.Errorf("%s field value is too long", f.name)
 		}
 
 		if f.minlength > 0 && len(v) < f.minlength {
-			return errors.New("The value is too short")
+			return fmt.Errorf("%s field value is too short", f.name)
 		}
 
 		if len(f.re) > 0 {
@@ -54,7 +54,7 @@ func (f *field) setvalue(obj reflect.Value, v []byte) error {
 				return err
 			}
 			if !ismatch {
-				return errors.New("Regular match failed")
+				return fmt.Errorf("%s field regular match failed", f.name)
 			}
 		}
 		fv.SetString(b2s(v))
