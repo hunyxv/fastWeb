@@ -10,7 +10,7 @@ type HandlerFunc func(ctx Context)
 // Engine fastweb 引擎
 type Engine struct {
 	*RouterGroup
-	router *router
+	router *Router
 	groups []*RouterGroup
 }
 
@@ -31,18 +31,41 @@ func New() *Engine {
 }
 
 // addRoute 向根 group 添加路由
-func (engine *Engine) addRoute(method string, pattern string, handler HandlerFunc) {
-	engine.router.addRoute(method, pattern, handler)
+func (engine *Engine) addRoute(method string, pattern string, handle HandlerFunc) {
+	engine.router.addRoute(method, pattern, handle)
 }
 
-// GET 添加 Get 路由
-func (engine *Engine) GET(pattern string, handler HandlerFunc) {
-	engine.addRoute("GET", pattern, handler)
+func (engine *Engine) GET(pattern string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodGet, pattern, handle)
 }
 
-// POST 添加 POST 路由
-func (engine *Engine) POST(pattern string, handler HandlerFunc) {
-	engine.addRoute("POST", pattern, handler)
+
+func (engine *Engine) HEAD(path string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodHead, path, handle)
+}
+
+func (engine *Engine) OPTIONS(path string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodOptions, path, handle)
+}
+
+func (engine *Engine) POST(pattern string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodPost, pattern, handle)
+}
+
+func (engine *Engine) PUT(path string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodPut, path, handle)
+}
+
+func (engine *Engine) PATCH(path string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodPatch, path, handle)
+}
+
+func (engine *Engine) DELETE(path string, handle HandlerFunc) {
+	engine.addRoute(fasthttp.MethodDelete, path, handle)
+}
+
+func (engine *Engine) ServeFiles(path, root string) {
+	engine.router.ServeFiles(path, root)
 }
 
 // Group 创建分组路由
@@ -64,20 +87,43 @@ func (group *RouterGroup) addRoute(method, comp string, handler HandlerFunc) {
 	group.engine.router.addRoute(method, pattern, handler)
 }
 
-// GET 添加 Get 路由
-func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
-	group.addRoute("GET", pattern, handler)
+func (group *RouterGroup) GET(pattern string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodGet, pattern, handle)
 }
 
-// POST 添加 POST 路由
-func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
-	group.addRoute("POST", pattern, handler)
+
+func (group *RouterGroup) HEAD(path string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodHead, path, handle)
+}
+
+func (group *RouterGroup) OPTIONS(path string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodOptions, path, handle)
+}
+
+func (group *RouterGroup) POST(pattern string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodPost, pattern, handle)
+}
+
+func (group *RouterGroup) PUT(path string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodPut, path, handle)
+}
+
+func (group *RouterGroup) PATCH(path string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodPatch, path, handle)
+}
+
+func (group *RouterGroup) DELETE(path string, handle HandlerFunc) {
+	group.addRoute(fasthttp.MethodDelete, path, handle)
+}
+
+func (group *RouterGroup) ServeFiles(path, root string) {
+	group.engine.router.ServeFiles(path, root)
 }
 
 func (engine *Engine) requestHandler(fctx *fasthttp.RequestCtx) {
 	ctx := ctxPool.Get().(*context)
 	ctx.Init(fctx)
-	engine.router.handle(ctx)
+	engine.router.Handle(ctx)
 	ctx.releaseCtx()
 }
 

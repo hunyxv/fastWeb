@@ -13,6 +13,7 @@ import (
 
 // Context fastweb 应用上下文
 type Context interface {
+	GetFctx() *fasthttp.RequestCtx
 	SetUserValue(key string, value interface{})
 	SetUserValueBytes(key []byte, value interface{})
 	UserValue(key string) interface{}
@@ -36,12 +37,14 @@ type Context interface {
 	Referer() []byte
 	UserAgent() []byte
 	Path() string
+	SetPath(string)
 	Host() string
 	// QueryArgs() *fasthttp.Args
 	// PostArgs() *fasthttp.Args
 	// MultipartForm() (*multipart.Form, error)
 	// FormFile(key string) (*multipart.FileHeader, error)
 	// FormValue(key string) []byte
+	SetURLParam(Params)
 	URLParam(string) (string, bool)
 	URLParams() map[string]string
 	FormValue(key string) (string, bool)
@@ -62,10 +65,10 @@ type Context interface {
 	// LocalAddr() net.Addr
 	// RemoteIP() net.IP
 	// LocalIP() net.IP
-	// Error(msg string, statusCode int)
+	Error(msg string, statusCode int)
 	// Success(contentType string, body []byte)
 	// SuccessString(contentType, body string)
-	// Redirect(uri string, statusCode int)	// 重定向 到本服务某uri
+	Redirect(uri string, statusCode int)	// 重定向 到本服务某uri
 	// RedirectBytes(uri []byte, statusCode int)
 	// SetBody(body []byte)
 	// SetBodyString(body string)
@@ -93,7 +96,7 @@ type Context interface {
 var _ Context = (*context)(nil)
 
 type context struct {
-	Context   *fasthttp.RequestCtx
+	fctx      *fasthttp.RequestCtx
 	urlParams map[string]string
 }
 
@@ -104,7 +107,11 @@ var ctxPool *sync.Pool = &sync.Pool{
 }
 
 func (c *context) Init(ctx *fasthttp.RequestCtx) {
-	c.Context = ctx
+	c.fctx = ctx
+}
+
+func (c *context) GetFctx() *fasthttp.RequestCtx {
+	return c.fctx
 }
 
 // func NewContext(fctx *Context) *context {
@@ -116,84 +123,102 @@ func (c *context) Init(ctx *fasthttp.RequestCtx) {
 
 func (c *context) releaseCtx() {
 	c.urlParams = nil
-	c.Context = nil
+	c.fctx = nil
 	ctxPool.Put(c)
 }
 
+func (c *context) SetURLParam(ps Params) {
+	for _, param := range ps {
+		c.urlParams[param.Key] = param.Value
+	}
+}
+
 func (c *context) SetUserValue(key string, value interface{}) {
-	c.Context.SetUserValue(key, value)
+	c.fctx.SetUserValue(key, value)
 }
 
 func (c *context) SetUserValueBytes(key []byte, value interface{}) {
-	c.Context.SetUserValueBytes(key, value)
+	c.fctx.SetUserValueBytes(key, value)
 }
 
 func (c *context) UserValue(key string) interface{} {
-	return c.Context.UserValue(key)
+	return c.fctx.UserValue(key)
 }
 
 func (c *context) UserValueBytes(key []byte) interface{} {
-	return c.Context.UserValueBytes(key)
+	return c.fctx.UserValueBytes(key)
 }
 
 func (c *context) VisitUserValues(visitor func([]byte, interface{})) {
-	c.Context.VisitUserValues(visitor)
+	c.fctx.VisitUserValues(visitor)
 }
 
 func (c *context) SetStatusCode(statusCode int) {
-	c.Context.SetStatusCode(statusCode)
+	c.fctx.SetStatusCode(statusCode)
 }
 
 func (c *context) SetContentType(contentType string) {
-	c.Context.SetContentType(contentType)
+	c.fctx.SetContentType(contentType)
 }
 
 func (c *context) SetContentTypeBytes(contentType []byte) {
-	c.Context.SetContentTypeBytes(contentType)
+	c.fctx.SetContentTypeBytes(contentType)
 }
 
 func (c *context) RequestURI() []byte {
-	return c.Context.RequestURI()
+	return c.fctx.RequestURI()
 }
 
 func (c *context) URI() *fasthttp.URI {
-	return c.Context.URI()
+	return c.fctx.URI()
 }
 
 func (c *context) Referer() []byte {
-	return c.Context.Referer()
+	return c.fctx.Referer()
 }
 
 func (c *context) UserAgent() []byte {
-	return c.Context.UserAgent()
+	return c.fctx.UserAgent()
 }
 
 func (c *context) Path() string {
-	return b2s(c.Context.Path())
+	return b2s(c.fctx.Path())
+}
+
+func (c *context) SetPath(path string) {
+	c.fctx.URI().SetPath(path)
 }
 
 func (c *context) Host() string {
-	return b2s(c.Context.Host())
+	return b2s(c.fctx.Host())
 }
 
 func (c *context) Method() string {
-	return b2s(c.Context.Method())
+	return b2s(c.fctx.Method())
+}
+
+func (c *context) Error(msg string, statusCode int) {
+	c.fctx.Error(msg, statusCode)
+}
+
+func (c *context) Redirect(uri string, statusCode int) {
+	c.fctx.Redirect(uri, statusCode)
 }
 
 func (c *context) ResetBody() {
-	c.Context.ResetBody()
+	c.fctx.ResetBody()
 }
 
 func (c *context) SendFile(path string) {
-	c.Context.SendFile(path)
+	c.fctx.SendFile(path)
 }
 
 func (c *context) NotFound() {
-	c.Context.NotFound()
+	c.fctx.NotFound()
 }
 
 func (c *context) Logger() fasthttp.Logger {
-	return c.Context.Logger()
+	return c.fctx.Logger()
 }
 
 func (c *context) URLParam(key string) (string, bool) {
@@ -205,7 +230,7 @@ func (c *context) URLParams() map[string]string {
 }
 
 func (c *context) FormValue(key string) (string, bool) {
-	value := c.Context.PostArgs().Peek(key)
+	value := c.fctx.PostArgs().Peek(key)
 	if len(value) > 0 {
 		return b2s(value), true
 	}
@@ -213,7 +238,7 @@ func (c *context) FormValue(key string) (string, bool) {
 }
 
 func (c *context) FormValues() map[string]string {
-	args := c.Context.PostArgs()
+	args := c.fctx.PostArgs()
 	form := make(map[string]string, args.Len())
 	args.VisitAll(func(key, val []byte) {
 		form[b2s(key)] = b2s(val)
@@ -222,7 +247,7 @@ func (c *context) FormValues() map[string]string {
 }
 
 func (c *context) QueryParam(key string) (string, bool) {
-	value := c.Context.QueryArgs().Peek(key)
+	value := c.fctx.QueryArgs().Peek(key)
 	if len(value) > 0 {
 		return b2s(value), true
 	}
@@ -235,35 +260,35 @@ func (c *context) QueryParams(obj interface{}) error {
 		return err
 	}
 
-	args := c.Context.QueryArgs()
+	args := c.fctx.QueryArgs()
 	args.VisitAll(func(key, val []byte) {
 		err = ps.padding(key, val, obj)
 	})
 	err = ps.valid(obj)
-	
+
 	return err
 }
 
 func (c *context) SetStatus(code int) {
-	c.Context.Response.SetStatusCode(code)
+	c.fctx.Response.SetStatusCode(code)
 }
 
 func (c *context) SetHeader(key, value string) {
-	c.Context.Response.Header.Set(key, value)
+	c.fctx.Response.Header.Set(key, value)
 }
 
 func (c *context) SetBodyStrf(code int, format string, values ...interface{}) {
 	c.SetHeader("Content-Type", "text/plain")
 	c.SetStatus(code)
-	fmt.Fprintf(c.Context, fmt.Sprintf(format, values...))
+	fmt.Fprintf(c.fctx, fmt.Sprintf(format, values...))
 }
 
 func (c *context) JSON(code int, obj interface{}) {
 	c.SetHeader("Content-Type", "application/json")
 	c.SetStatus(code)
-	encoder := json.NewEncoder(c.Context)
+	encoder := json.NewEncoder(c.fctx)
 	if err := encoder.Encode(obj); err != nil {
-		fmt.Fprintf(c.Context, err.Error())
+		fmt.Fprintf(c.fctx, err.Error())
 		c.SetStatus(500)
 	}
 }
@@ -271,11 +296,11 @@ func (c *context) JSON(code int, obj interface{}) {
 func (c *context) Data(code int, data []byte) {
 	c.SetStatus(code)
 	dReader := bytes.NewReader(data)
-	dReader.WriteTo(c.Context)
+	dReader.WriteTo(c.fctx)
 }
 
 func (c *context) HTML(code int, html string) {
 	c.SetHeader("Content-Type", "text/html")
 	c.SetStatus(code)
-	fmt.Fprint(c.Context, html)
+	fmt.Fprint(c.fctx, html)
 }
