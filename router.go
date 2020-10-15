@@ -235,7 +235,15 @@ func (r *Router) ServeFiles(path, root string) {
 
 func (r *Router) recv(ctx Context) {
 	if rcv := recover(); rcv != nil {
-		r.PanicHandler(ctx)
+		if r.PanicHandler != nil {
+			ctx.SetUserValue("PanicError", rcv)
+			r.PanicHandler(ctx)
+		} else {
+			ctx.Error(
+				fasthttp.StatusMessage(fasthttp.StatusInternalServerError), 
+				fasthttp.StatusInternalServerError,
+			)
+		}
 	}
 }
 
@@ -252,9 +260,7 @@ func (r *Router) Lookup(method, path string) (HandlerFunc, Params, bool) {
 }
 
 func (r *Router) Handle(ctx *context) {
-	if r.PanicHandler != nil {
-		defer r.recv(ctx)
-	}
+	defer r.recv(ctx)
 
 	path := ctx.Path()
 	if root := r.trees[ctx.Method()]; root != nil {
