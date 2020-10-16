@@ -68,7 +68,7 @@ type Context interface {
 	Error(msg string, statusCode int)
 	// Success(contentType string, body []byte)
 	// SuccessString(contentType, body string)
-	Redirect(uri string, statusCode int)	// 重定向 到本服务某uri
+	Redirect(uri string, statusCode int) // 重定向 到本服务某uri
 	// RedirectBytes(uri []byte, statusCode int)
 	// SetBody(body []byte)
 	// SetBodyString(body string)

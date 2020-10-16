@@ -35,7 +35,7 @@ func TestPadding(t *testing.T) {
 	args.Set("age", "18")
 	args.Set("e-mail", "1334435$#3djsd@gmail.com")
 
-	args.VisitAll(func(key, val []byte){
+	args.VisitAll(func(key, val []byte) {
 		err = p.padding(key, val, r)
 	})
 	if err != nil {

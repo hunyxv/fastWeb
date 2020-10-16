@@ -1,8 +1,6 @@
 package fastweb
 
 import (
-	"time"
-
 	"github.com/valyala/fasthttp"
 )
 
@@ -40,7 +38,6 @@ func (engine *Engine) addRoute(method string, pattern string, handle HandlerFunc
 func (engine *Engine) GET(pattern string, handle HandlerFunc) {
 	engine.addRoute(fasthttp.MethodGet, pattern, handle)
 }
-
 
 func (engine *Engine) HEAD(path string, handle HandlerFunc) {
 	engine.addRoute(fasthttp.MethodHead, path, handle)
@@ -93,7 +90,6 @@ func (group *RouterGroup) GET(pattern string, handle HandlerFunc) {
 	group.addRoute(fasthttp.MethodGet, pattern, handle)
 }
 
-
 func (group *RouterGroup) HEAD(path string, handle HandlerFunc) {
 	group.addRoute(fasthttp.MethodHead, path, handle)
 }
@@ -130,22 +126,14 @@ func (engine *Engine) requestHandler(fctx *fasthttp.RequestCtx) {
 }
 
 // Run 启动服务
-func (engine *Engine) Run(addr string, readTimeout time.Duration, writeTimeout time.Duration) (err error) {
-	var rTimeout, wTimeout time.Duration
-	if readTimeout != 0 {
-		rTimeout = readTimeout
-	}
-
-	if writeTimeout != 0 {
-		wTimeout = writeTimeout
-	}
-
+func (engine *Engine) Run(addr string, options ...SvrOption) (err error) {
 	server := &fasthttp.Server{
 		Handler: engine.requestHandler,
-		ReadTimeout: rTimeout,
-		WriteTimeout: wTimeout,
-		Name: "fastweb",
-		// NoDefaultServerHeader: true,
+		Name:    "fastweb",
+	}
+
+	for _, f := range options {
+		f(server)
 	}
 
 	return server.ListenAndServe(addr) // fasthttp.ListenAndServe(addr, engine.requestHandler)

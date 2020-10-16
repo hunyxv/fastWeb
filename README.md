@@ -1,12 +1,11 @@
 # fastWeb
-基于 [fasthttp](https://github.com/valyala/fasthttp) 的简单 web 框架
+基于 [fasthttp](https://github.com/valyala/fasthttp) 和 [httpreuter](https://github.com/julienschmidt/httprouter) 的简单 web 框架。
 
 ```go
 package main
 
 import (
 	"fastweb"
-	"fmt"
 	"time"
 )
 
@@ -28,7 +27,7 @@ func Query(ctx fastweb.Context) {
 
 	err := ctx.QueryParams(&req)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	ctx.SetBodyStrf(200, "[%s] query: %+v\n", time.Now(), req)
 }
@@ -44,6 +43,6 @@ func main() {
 	group.GET("/", Query)
 	group.GET("/:id", URLParams)
 
-	engine.Run("0.0.0.0:8080")
+	engine.Run("0.0.0.0:8080", fastweb.WithName("app"))
 }
 ```

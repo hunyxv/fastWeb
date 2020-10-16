@@ -173,7 +173,7 @@ func scan(obj interface{}) (*params, error) {
 	t = t.Elem()
 	pname := t.Name()
 
-	if p, ok := cache.Load(pname); ok { // cache[pname]; ok {
+	if p, ok := cache.Load(pname); ok {
 		return p.(*params), nil
 	}
 
