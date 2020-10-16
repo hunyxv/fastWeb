@@ -127,7 +127,7 @@ func (engine *Engine) requestHandler(fctx *fasthttp.RequestCtx) {
 }
 
 // Run 启动服务
-func (engine *Engine) Run(addr string, options ...SvrOption) (err error) {
+func (engine *Engine) Run(addr string, options ...svrOption) (err error) {
 	server := &fasthttp.Server{
 		Handler: engine.requestHandler,
 		Name:    "fastweb",
