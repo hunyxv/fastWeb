@@ -12,6 +12,7 @@ type Engine struct {
 	*RouterGroup
 	router *Router
 	groups []*RouterGroup
+	logger fasthttp.Logger
 }
 
 // RouterGroup 路由分组结构体
@@ -130,6 +131,7 @@ func (engine *Engine) Run(addr string, options ...SvrOption) (err error) {
 	server := &fasthttp.Server{
 		Handler: engine.requestHandler,
 		Name:    "fastweb",
+		Logger:  engine.logger,
 	}
 
 	for _, f := range options {
